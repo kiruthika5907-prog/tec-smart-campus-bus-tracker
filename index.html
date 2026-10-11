@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Bus Tracker — Tagore Engineering College</title>
+<style>
+  :root {
+    --ink: #16232b;
+    --paper: #f3f6f4;
+    --teal: #0f6e6e;
+    --teal-deep: #0a4f4f;
+    --amber: #e0932f;
+    --line: #d9e2df;
+    --card: #ffffff;
+    --muted: #5c6b68;
+    --green: #2e8b57;
+    --yellow: #d9a017;
+    --red: #c0432f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* ---------- Landing ---------- */
+  #landing {
+    background: linear-gradient(160deg, var(--teal-deep), var(--teal) 60%, #16918f);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+  }
+  .landing-box { max-width: 420px; text-align: center; }
+  .landing-logo {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 1rem;
+  }
+  .landing-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; }
+  .landing-tag { font-size: 0.95rem; opacity: 0.9; margin-top: 0.3rem; font-weight: 600; }
+  .landing-desc { font-size: 0.85rem; opacity: 0.85; margin: 1.1rem 0 1.8rem; line-height: 1.5; }
+  .landing-btns { display: flex; flex-direction: column; gap: 0.7rem; }
+  .btn {
+    font-family: inherit;
+    border: none;
+    padding: 0.75rem 1.2rem;
+    border-radius: 9px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--amber); color: #38260a; }
+  .btn-light { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-teal:hover { background: var(--teal-deep); }
+  .btn-outline { background: transparent; color: var(--teal-deep); border: 1px solid var(--teal); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-block { width: 100%; }
+  .btn-sm { padding: 0.45rem 0.8rem; font-size: 0.8rem; }
+
+  /* ---------- Auth screens ---------- */
+  .auth-wrap { max-width: 420px; margin: 0 auto; padding: 2rem 1.4rem 3rem; min-height: 100vh; }
+  .auth-header { text-align: center; margin-bottom: 1.6rem; }
+  .auth-header .role-icon { font-size: 2rem; }
+  .auth-header h2 { margin: 0.4rem 0 0.1rem; color: var(--teal-deep); font-size: 1.3rem; }
+  .auth-header p { color: var(--muted); font-size: 0.85rem; margin: 0; }
+  .back-link { color: var(--muted); font-size: 0.85rem; cursor: pointer; display: inline-block; margin-bottom: 1rem; }
+  .field { margin-bottom: 0.9rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .field label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+  input, select {
+    font-family: inherit; background: var(--card); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.9rem; width: 100%;
+  }
+  .auth-toggle { text-align: center; margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
+  .auth-toggle a { color: var(--teal); font-weight: 700; cursor: pointer; text-decoration: none; }
+  .error-msg { background: rgba(192,67,47,0.1); color: var(--red); padding: 0.55rem 0.8rem; border-radius: 7px; font-size: 0.82rem; margin-bottom: 0.9rem; display: none; }
+  .success-msg { background: rgba(46,139,87,0.1); color: var(--green); padding: 0.55rem 0.8rem; border-radius: 7px; font-size: 0.82rem; margin-bottom: 0.9rem; display: none; }
+  .demo-creds { background: #eef3f1; border: 1px dashed var(--line); border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.76rem; color: var(--muted); margin-top: 1rem; line-height: 1.5; }
+
+  /* ---------- App shell ---------- */
+  .app-header { background: var(--teal-deep); color: #fff; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+  .app-header .who { font-size: 0.95rem; font-weight: 700; }
+  .app-header .sub { font-size: 0.72rem; opacity: 0.8; }
+  .icon-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1rem; }
+  .app-body { max-width: 520px; margin: 0 auto; padding: 1.3rem 1.1rem 5rem; }
+
+  .status-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1.2rem; }
+  .status-card .bus-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem; }
+  .bus-num { font-size: 1.2rem; font-weight: 800; color: var(--teal-deep); }
+  .status-pill { font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; }
+  .status-pill.on-route { background: rgba(46,139,87,0.12); color: var(--green); }
+  .status-pill.delayed { background: rgba(217,160,23,0.15); color: var(--yellow); }
+  .status-pill.not-active { background: rgba(192,67,47,0.12); color: var(--red); }
+  .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-top: 0.9rem; font-size: 0.82rem; }
+  .kv-grid div span.k { display: block; color: var(--muted); font-size: 0.72rem; }
+  .kv-grid div span.v { font-weight: 700; }
+
+  .grid-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-bottom: 1.2rem; }
+  .tile-btn { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 0.7rem; text-align: center; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+  .tile-btn .emoji { font-size: 1.4rem; display: block; margin-bottom: 0.3rem; }
+  .tile-btn:hover { border-color: var(--teal); }
+  .section-title { font-size: 0.95rem; font-weight: 800; color: var(--teal-deep); margin: 1.4rem 0 0.7rem; }
+
+  /* ---------- Route timeline ---------- */
+  .route-map { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem; }
+  .stop-row { display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.45rem 0; position: relative; }
+  .stop-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--line); border: 2px solid var(--card); flex-shrink: 0; position: relative; z-index: 1; margin-top: 0.15rem; }
+  .stop-dot.passed { background: var(--teal); }
+  .stop-dot.current { background: var(--amber); box-shadow: 0 0 0 4px rgba(224,147,47,0.25); }
+  .stop-line { position: absolute; left: 6px; top: 20px; width: 2px; height: calc(100% - 4px); background: var(--line); z-index: 0; }
+  .stop-line.passed { background: var(--teal); }
+  .stop-info { flex: 1; }
+  .stop-name { font-size: 0.86rem; font-weight: 700; }
+  .stop-name.current { color: var(--amber); }
+  .stop-time { font-size: 0.74rem; color: var(--muted); }
+
+  .eta-banner { background: rgba(15,110,110,0.08); border-radius: 10px; padding: 0.7rem 0.9rem; margin: 1rem 0; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+  .eta-banner .big { font-size: 1.05rem; font-weight: 800; color: var(--teal-deep); }
+
+  .notif-item { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; font-size: 0.85rem; }
+  .notif-item .time { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; }
+
+  .driver-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: flex; gap: 0.9rem; align-items: center; }
+  .driver-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--teal); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+  .call-btn { display: inline-block; margin-top: 0.5rem; background: var(--green); color: #fff; text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 7px; font-size: 0.8rem; font-weight: 700; }
+
+  .trip-btns { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.2rem; }
+
+  /* ---------- Directory (Bus/Driver list) ---------- */
+  .search-box { margin-bottom: 1rem; }
+  .filter-row { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.4rem; margin-bottom: 1rem; }
+  .filter-chip { flex-shrink: 0; padding: 0.35rem 0.8rem; border-radius: 20px; background: var(--card); border: 1px solid var(--line); font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--muted); }
+  .filter-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .route-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.7rem; }
+  .route-card .top-row { display: flex; justify-content: space-between; align-items: center; }
+  .route-card .rname { font-weight: 800; color: var(--teal-deep); font-size: 0.95rem; }
+  .route-card .rarea { font-size: 0.72rem; color: var(--muted); }
+  .route-card .rmeta { font-size: 0.8rem; margin-top: 0.35rem; color: var(--ink); }
+  .empty-note { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 2rem 1rem; }
+  .incharge-card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 0.85rem; }
+
+  /* ---------- Admin ---------- */
+  #adminScreen { display: none; }
+  .admin-shell { display: flex; min-height: 100vh; }
+  .admin-sidebar { width: 210px; background: var(--teal-deep); color: #fff; padding: 1.2rem 0.8rem; flex-shrink: 0; }
+  .admin-sidebar .brand-mini { font-weight: 800; font-size: 1.05rem; margin-bottom: 1.4rem; padding: 0 0.4rem; }
+  .admin-nav-item { padding: 0.6rem 0.7rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-bottom: 0.2rem; opacity: 0.85; }
+  .admin-nav-item.active { background: rgba(255,255,255,0.15); opacity: 1; font-weight: 700; }
+  .admin-main { flex: 1; padding: 1.4rem 1.6rem 3rem; overflow-x: auto; }
+  .admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.3rem; flex-wrap: wrap; gap: 0.6rem; }
+  .admin-topbar h2 { margin: 0; color: var(--teal-deep); font-size: 1.25rem; }
+  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.9rem; margin-bottom: 1.6rem; }
+  .stat-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem; }
+  .stat-card .num { font-size: 1.5rem; font-weight: 800; color: var(--teal-deep); }
+  .stat-card .lbl { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--line); }
+  th { background: #eef3f1; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .table-actions { display: flex; gap: 0.4rem; }
+  .link-btn { background: none; border: none; color: var(--teal); font-size: 0.78rem; cursor: pointer; font-weight: 700; padding: 0.2rem 0.4rem; }
+  .link-btn.danger { color: var(--red); }
+  .toolbar-row { display: flex; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .toolbar-row input[type="text"] { max-width: 240px; }
+
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(10,20,20,0.45); align-items: center; justify-content: center; padding: 1rem; z-index: 20; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--card); border-radius: 14px; padding: 1.5rem; max-width: 460px; width: 100%; max-height: 88vh; overflow-y: auto; }
+  .modal h3 { margin: 0 0 1rem; color: var(--teal-deep); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.1rem; }
+  .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 0.4rem; }
+  .badge-dot.green { background: var(--green); }
+  .badge-dot.red { background: var(--red); }
+  .stops-editor-row { display: grid; grid-template-columns: 90px 1fr auto; gap: 0.4rem; margin-bottom: 0.4rem; align-items: center; }
+  .small-x { background: none; border: none; color: var(--red); cursor: pointer; font-weight: 800; }
+
+  @media (max-width: 720px) {
+    .admin-shell { flex-direction: column; }
+    .admin-sidebar { width: 100%; display: flex; gap: 0.4rem; overflow-x: auto; padding: 0.8rem; }
+    .admin-sidebar .brand-mini { display: none; }
+    .admin-nav-item { white-space: nowrap; margin-bottom: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LANDING ============ -->
+<div class="screen active" id="landing">
+  <div class="landing-box">
+    <div class="landing-logo">🚌</div>
+    <div class="landing-title">Campus Bus Tracker</div>
+    <div class="landing-tag">Track. Travel. Stay Connected.</div>
+    <div class="landing-desc">Tagore Engineering College's digital platform to track buses, view routes, check drivers, and know pickup and arrival times.</div>
+    <div class="landing-btns">
+      <button class="btn btn-primary btn-block" onclick="go('authStudent')">🎓 Student Login</button>
+      <button class="btn btn-light btn-block" onclick="go('authDriver')">🧑‍✈️ Driver Login</button>
+      <button class="btn btn-light btn-block" onclick="go('authAdmin')">🧑‍🏫 Staff / Admin Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STUDENT AUTH ============ -->
+<div class="screen" id="authStudent">
+  <div class="auth-wrap">
+    <span class="back-link" onclick="go('landing')">&larr; Back</span>
+    <div class="auth-header">
+      <div class="role-icon">🎓</div>
+      <h2 id="studAuthTitle">Student Login</h2>
+      <p id="studAuthSub">Track your bus, check routes and more</p>
+    </div>
+    <div class="error-msg" id="studError"></div>
+    <div class="success-msg" id="studSuccess"></div>
+
+    <div id="studentLoginForm">
+      <div class="field"><label>Email</label><input type="text" id="sl_email" placeholder="you@college.edu"></div>
+      <div class="field"><label>Password</label><input type="password" id="sl_password" placeholder="••••••••"></div>
+      <button class="btn btn-teal btn-block" onclick="studentLogin()">Login</button>
+      <div class="demo-creds">Demo login — Email: <b>anjali@college.edu</b> &nbsp;Password: <b>pass123</b></div>
+      <div class="auth-toggle">New here? <a onclick="toggleStudentForm(true)">Register</a></div>
+    </div>
+
+    <div id="studentRegisterForm" style="display:none;">
+      <div class="field-row">
+        <div class="field"><label>Full Name</label><input type="text" id="sr_name"></div>
+        <div class="field"><label>Register Number</label><input type="text" id="sr_reg"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Department</label><input type="text" id="sr_dept" placeholder="CSE"></div>
+        <div class="field"><label>Year</label>
+          <select id="sr_year"><option>1st Year</option><option selected>2nd Year</option><option>3rd Year</option><option>4th Year</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Section</label><input type="text" id="sr_section" placeholder="A"></div>
+        <div class="field"><label>Your Bus Route</label><select id="sr_route"></select></div>
+      </div>
+      <div class="field"><label>Boarding Point</label><select id="sr_boarding"></select></div>
+      <div class="field"><label>Email</label><input type="text" id="sr_email"></div>
+      <div class="field"><label>Phone Number</label><input type="text" id="sr_phone"></div>
+      <div class="field-row">
+        <div class="field"><label>Password</label><input type="password" id="sr_password"></div>
+        <div class="field"><label>Confirm Password</label><input type="password" id="sr_password2"></div>
+      </div>
+      <button class="btn btn-teal btn-block" onclick="studentRegister()">Register</button>
+      <div class="auth-toggle">Already registered? <a onclick="toggleStudentForm(false)">Login</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DRIVER AUTH ============ -->
+<div class="screen" id="authDriver">
+  <div class="auth-wrap">
+    <span class="back-link" onclick="go('landing')">&larr; Back</span>
+    <div class="auth-header"><div class="role-icon">🧑‍✈️</div><h2>Driver Login</h2><p>Update your trip and bus location</p></div>
+    <div class="error-msg" id="drvError"></div>
+    <div class="field"><label>Driver Phone (as ID)</label><input type="text" id="dl_id" placeholder="9629153341"></div>
+    <div class="field"><label>Password</label><input type="password" id="dl_password" placeholder="••••••••"></div>
+    <button class="btn btn-teal btn-block" onclick="driverLogin()">Login</button>
+    <div class="demo-creds">Demo login — Driver phone: <b>9629153341</b> (Gengan, Route 1) &nbsp;Password: <b>drv123</b></div>
+  </div>
+</div>
+
+<!-- ============ ADMIN AUTH ============ -->
+<div class="screen" id="authAdmin">
+  <div class="auth-wrap">
+    <span class="back-link" onclick="go('landing')">&larr; Back</span>
+    <div class="auth-header"><div class="role-icon">🧑‍🏫</div><h2>Staff / Admin Login</h2><p>Manage students, drivers, buses & routes</p></div>
+    <div class="error-msg" id="admError"></div>
+    <div class="field"><label>Admin Email</label><input type="text" id="al_email" placeholder="admin@college.edu"></div>
+    <div class="field"><label>Password</label><input type="password" id="al_password" placeholder="••••••••"></div>
+    <button class="btn btn-teal btn-block" onclick="adminLogin()">Login</button>
+    <div class="demo-creds">Demo login — Email: <b>admin@college.edu</b> &nbsp;Password: <b>admin123</b></div>
+  </div>
+</div>
+
+<!-- ============ STUDENT APP ============ -->
+<div class="screen" id="studentApp">
+  <div class="app-header"><div><div class="who" id="studWelcome">Welcome</div><div class="sub">Student Dashboard</div></div><button class="icon-btn" onclick="logout()">⏻</button></div>
+  <div class="app-body" id="studentHome"></div>
+</div>
+
+<!-- ============ STUDENT SUBPAGE ============ -->
+<div class="screen" id="studentSub">
+  <div class="app-header"><div><div class="who" id="subTitle">Page</div><div class="sub">Campus Bus Tracker</div></div><button class="icon-btn" onclick="go('studentApp'); renderStudentHome();">✕</button></div>
+  <div class="app-body" id="subBody"></div>
+</div>
+
+<!-- ============ DRIVER APP ============ -->
+<div class="screen" id="driverApp">
+  <div class="app-header"><div><div class="who" id="drvWelcome">Welcome</div><div class="sub">Driver Dashboard</div></div><button class="icon-btn" onclick="logout()">⏻</button></div>
+  <div class="app-body" id="driverBody"></div>
+</div>
+
+<!-- ============ ADMIN APP ============ -->
+<div class="screen" id="adminScreen">
+  <div class="admin-shell">
+    <div class="admin-sidebar" id="adminSidebar"></div>
+    <div class="admin-main" id="adminMain"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalContent"></div></div>
+
+<script>
+/* ======================= REAL ROUTE DATA (from Tagore Engineering College bus sheet) ======================= */
+/* Each stop: {t: "time label", n: "stop name"}. Times kept exactly as in source. Unclear fields flagged. */
+const RAW_ROUTES = [
+  { no: "1", area: "", driver: "Gengan", cell: "9629153341",
+    stops: [["6.30am","Kanchipuram Bus stand"],["6.35am","Taluka Office"],["6.40am","Moongil Mandapam"],["6.42am","Rangasamy Kulam"],["6.45am","Pachayapas College"],["6.50am","Cetti Theru"],["6.52am","Toll Gate"],["6.55am","Periyar Nagar Petrol Punk"],["7.00am","Puthu Kovil"],["7.02am","Muthayalpet"],["7.05am","Ayampet"],["7.10am","Otivakkam"],["7.15am","Valajapad"],["7.20am","Devarpakkam"],["7.25am","Sorpanachery"],["7.30am","Orakadam"],["7.45am / 8.00am","Tec"]] },
+  { no: "1A", area: "", driver: "Narayanan", cell: "9043121276",
+    stops: [["6.10am","Acharapakkam"],["6.30am","Melmaruvathur"],["6.50am","Maduranthakam"],["8.15am","Tec"]] },
+  { no: "1B", area: "", driver: "Sivakumar", cell: "9894370031",
+    stops: [["6.30am","Periyar Nagar"],["6.35am","Kannikapuram"],["6.40am","Ayyampet"],["6.42am","Utthakarai"],["6.45am","Devarapakkam"],["6.50am","Valajapad"],["7.15am","Padapai"],["7.30am","Mudichur"],["7.40am","Tambaram West"],["7.50am","Perungalathur"],["8.00am","Vadalur"],["8.15am","TEC"]] },
+  { no: "1C", area: "", driver: "Chockalingam", cell: "8883019244",
+    stops: [["6.40am","Ayampet"],["6.55am","Valajapad"],["7.00am","Valajapad Market"],["7.05am","Puliyampakkam"],["7.10am","Palaya seevaram"],["7.18am","Viliyambakkam"],["7.22am","Aathur"],["7.26am","Thinmavaram"],["7.30am","Bypass Chengalepet"],["7.35am","Mahendracity"],["7.45am","Maraimalai Nagar"],["7.51am","Melrosapuram"],["8.15am","Tec"]] },
+  { no: "1D", area: "", driver: "Radha", cell: "9629144182",
+    stops: [["6.30am","Uthiramerur Bus Stand"],["6.35am","Nelvai Kootu road"],["6.42am","Mangalam"],["6.50am","Chengalpet Ratinkinaru"],["6.55am","Old Bus Stand"],["7.00am","New Bus Stand"],["7.40am","Singaperumal koil"],["7.45am","kattagulathur"],["7.55am","potheri"],["Not clearly readable","TEC"]] },
+  { no: "2", area: "", driver: "Krishnan", cell: "9551996161",
+    stops: [["6.05am","Manali"],["6.15am","Madhavaram"],["6.37am","Tirumangalam"],["6.45am – 7.43am","Bus will come via Maduravoyal Bypass"],["7.50am","Perungalathur"],["8.00am","Vandalur"],["Not clearly readable","TEC"]] },
+  { no: "3A", area: "", driver: "Samireddy", cell: "9962289189",
+    stops: [["6.35am","Iyappan Thangal"],["6.40am","Kaattu pakkam"],["6.45am","Mangadu"],["6.55am","Kundrathur"],["7.05am","Anagaputhur"],["7.10am","Pammal"],["8.15am","Tec"]] },
+  { no: "4", area: "", driver: "Nagaraj", cell: "8015912911",
+    stops: [["6.20am","Pattabiram"],["6.25am","Hindu College"],["6.30am","Check Post"],["6.35am","Bus Stand"],["6.38am","Manikandapuram"],["6.40am","Singapore Shopping"],["6.42am","Petrol Bunk"],["6.45am","Dunlab"],["6.47am","Mannuvarpet"],["6.50am","Britaniya"],["7.00am","Saravanastore"],["7.12am","Collector Nagar"],["7.13am","Goldenplat"],["7.14am","Vaavin"],["7.17am","Decklathon"],["7.20am","Maduravoyal Bypass"],["7.30am","Porur Toll"],["7.55am","Perungalathur Erikarai"],["8.00am","Iraniamman Temple"]] },
+  { no: "5", area: "", driver: "Kumar", cell: "9500165659",
+    stops: [["5.50am","Thalakuppam"],["6.05am","Bharathiyar Nagar"],["6.15am","Theradi Main Road"],["6.20am","Raja Kadai"],["6.25am","Toll Gate Main Road"],["Not clearly readable","Remaining stops not clearly readable"]] },
+  { no: "6", area: "", driver: "Ravi", cell: "8825528348",
+    stops: [["7.00am","Kottamedu"],["7.10am","Nellikuppam"],["7.30am","Guduvanchery"],["8.15am","Tec"]] },
+  { no: "7", area: "", driver: "Manikandan", cell: "9003964864",
+    stops: [["6.50am","Vels College Signal"],["6.55am","Narayana School"],["7.00am","Keelkatalai Signal"],["7.10am","Kaiveli"],["7.13am","Jerusalem college Bridge"],["7.16am","Pallikaranai"],["7.20am","Medavakkam"],["7.35am","Camp Road"],["7.40am","Bharath University"],["7.50am","Vengambakkam"],["Not clearly readable","TEC"]] },
+  { no: "14", area: "", driver: "New Driver", cell: "Not clearly readable",
+    stops: [["6.35am","Tirukalakumdram"],["7.05am","Chengalpet GH"],["7.15am","Maraimalai nagar"],["7.50am","Vandalur"],["8.00am","TMCH"]] },
+  { no: "20", area: "Nungambakkam Route", driver: "Kathirvel", cell: "7418836488",
+    stops: [["6.40am","Soban Babu Silai"],["6.45am","Anna Arch"],["6.50am","Arumbakkam"],["7.00am","Vijayakanth Kalyana Mandabam"],["7.10am","MMDA Signal"],["7.15am","Vadapalani Sivan Temple"],["7.20am","Ashok Pillar"],["7.25am","Kasi Theatre"],["7.30am","Ekkadu thangal Signal"],["7.35am","Alandur Metro Station"],["7.45am","Pallavaram"],["7.55am","Tambaram Railway Staytion"],["8.15am","TEC"]] },
+  { no: "22", area: "Velachery Route", driver: "Devanesan", cell: "9445717809",
+    stops: [["7.00am","check post"],["7.03am","Phonex Mall"],["7.05am","100 feets road"],["7.06am","Petrol Bunk"],["7.07am","Vijayanagar Bus stand"],["7.10am","Railway station"],["7.20am","Pallikaranai"],["7.30am","Medavakkam"],["7.35am","Medavakkam Koot road"],["7.45am","Camp Raod"],["7.50am","MCC college"],["8.15am","TEC"]] },
+  { no: "23", area: "Urapakkam Route", driver: "Vijay", cell: "9789986945",
+    stops: [["7.40am","Urapakkam Tea Shop"],["7.46am","Urapakkam school stop"],["7.52am","Vandalur"],["8.15am","TEC"]] },
+  { no: "24", area: "Mylapore Route", driver: "Prabakaran", cell: "9551145177",
+    stops: [["6.30am","Mylapore"],["6.35am","Mandaiveli"],["6.45am","Santhom"],["6.55am","Adyar depo"],["7.02am","Tiruvanmiyur Signal"],["7.10am","SRP Tools"],["7.15am","Perungudi"],["7.25am","Tooraipakkam"],["7.35am","Sholinganallur"],["7.40am","Navalur"],["7.55am","Kelambakkam"],["8.00am","Puthu pakkam"],["8.05am","Mambakkam"],["8.12am","Kandigai"],["8.15am","TEC"]] },
+  { no: "25", area: "", driver: "Sankar", cell: "7358402641",
+    stops: [["7.15am","Padmavathy"],["7.18am","Kozhipannai"],["7.20am","Rajakilpakkam"],["7.25am","Camp road"],["7.27am","Bus stand"],["7.30am","Ambedkar nagar"],["7.32am","Alwin school"],["7.40am","Bharath Univ"],["7.45am","Mapedu"],["7.50am","Vengambakkam"],["Not clearly readable","TEC"]] },
+  { no: "Not clearly readable", area: "", driver: "Thanikachalam", cell: "9092061149",
+    stops: [["7.30am","Chrompet Saravana Store"],["7.35am","Chrompet Bus Stand"],["7.40am","Sanitorium"],["7.50am","Hindumission Hospital"],["8.15am","Tec"]] },
+  { no: "Not clearly readable (Fragment A)", area: "", driver: "Not clearly readable", cell: "Not clearly readable",
+    stops: [["6.37am","Kasi Medu"],["6.40am","Royapuram St Antony School"],["6.40am","Royapuram Bus Stand"],["6.50am","Ezhilagam"],["6.55am","LIC main Road"],["7.05am","Jemini Bridge"],["7.10am","Thenampet"],["7.15am","Saidapet"],["7.20am","Alandur Metro Station"],["7.25am","Meenambakkam"],["7.32am","Pallavaram"],["8.15am","Tec"]] },
+  { no: "Not clearly readable (Fragment B)", area: "", driver: "Not clearly readable", cell: "Not clearly readable",
+    stops: [["7.20am","Alathur"],["7.25am","Tiruporur"],["7.30am","SSN College"],["7.40am","Kelambakkam"],["8.15am","Not clearly readable"]] }
+];
+
+const TRANSPORT_INCHARGES = [
+  { name: "Vinoth", phone: "8110848209" },
+  { name: "Jaiganesh", phone: "8015626982" }
+];
+
+function buildRoutes() {
+  return RAW_ROUTES.map(r => ({
+    routeNo: r.no,
+    area: r.area,
+    driver: r.driver,
+    cell: r.cell,
+    stops: r.stops.map(([t, n]) => ({ time: t, name: n })),
+    status: "not-active"
+  }));
+}
+
+/* ======================= STATE ======================= */
+function defaultState() {
+  const routes = buildRoutes();
+  const liveLocations = {};
+  routes.forEach(r => { liveLocations[r.routeNo] = { stopIndex: 0, status: "not-active", tripActive: false }; });
+  return {
+    routes,
+    liveLocations,
+    students: [
+      { name: "Anjali R", reg: "21CSE045", dept: "CSE", year: "2nd Year", section: "A", email: "anjali@college.edu", phone: "9876543210", routeNo: "1", boardingPoint: "Kanchipuram Bus stand", password: "pass123" }
+    ],
+    notifications: [
+      { text: "🚌 Route 1 bus has started its trip.", time: "6:28 AM" }
+    ]
+  };
+}
+
+let state = loadState();
+let session = { role: null, id: null };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('cbt_state_v2');
+    return raw ? JSON.parse(raw) : defaultState();
+  } catch (e) { return defaultState(); }
+}
+function saveState() { try { localStorage.setItem('cbt_state_v2', JSON.stringify(state)); } catch (e) {} }
+function resetDemo() { state = defaultState(); saveState(); alert('Demo data reset to the original imported route sheet.'); location.reload(); }
+
+/* ======================= NAV / HELPERS ======================= */
+function go(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function logout() { session = { role: null, id: null }; go('landing'); }
+function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str == null ? '' : String(str); return d.innerHTML; }
+function statusLabel(s) { return s === 'on-route' ? '🟢 ON ROUTE' : s === 'delayed' ? '🟡 DELAYED' : '🔴 NOT ACTIVE'; }
+function statusClass(s) { return s === 'on-route' ? 'on-route' : s === 'delayed' ? 'delayed' : 'not-active'; }
+function pushNotif(text) {
+  const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  state.notifications.unshift({ text, time });
+  state.notifications = state.notifications.slice(0, 25);
+  saveState();
+}
+function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3500); }
+function showSuccess(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+function findRoute(no) { return state.routes.find(r => r.routeNo === no); }
+function telLink(phone) {
+  if (!phone || phone.toLowerCase().includes('not clearly')) return null;
+  return phone.replace(/\s/g, '');
+}
+
+/* ======================= STUDENT AUTH ======================= */
+function toggleStudentForm(showRegister) {
+  document.getElementById('studentLoginForm').style.display = showRegister ? 'none' : 'block';
+  document.getElementById('studentRegisterForm').style.display = showRegister ? 'block' : 'none';
+  document.getElementById('studAuthTitle').textContent = showRegister ? 'Student Registration' : 'Student Login';
+  document.getElementById('studAuthSub').textContent = showRegister ? 'Create your account to get started' : 'Track your bus, check routes and more';
+  if (showRegister) populateRegisterRouteDropdown();
+}
+
+function populateRegisterRouteDropdown() {
+  const sel = document.getElementById('sr_route');
+  sel.innerHTML = state.routes.map(r => `<option value="${escapeHtml(r.routeNo)}">${r.area ? escapeHtml(r.area) + ' — ' : ''}Route ${escapeHtml(r.routeNo)} (${escapeHtml(r.driver)})</option>`).join('');
+  sel.onchange = populateBoardingDropdown;
+  populateBoardingDropdown();
+}
+function populateBoardingDropdown() {
+  const route = findRoute(document.getElementById('sr_route').value);
+  const sel = document.getElementById('sr_boarding');
+  sel.innerHTML = (route ? route.stops : []).map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.time)} — ${escapeHtml(s.name)}</option>`).join('');
+}
+
+function studentLogin() {
+  const email = document.getElementById('sl_email').value.trim();
+  const pass = document.getElementById('sl_password').value;
+  if (!email || !pass) { showError('studError', 'Please enter both email and password.'); return; }
+  const stu = state.students.find(s => s.email.toLowerCase() === email.toLowerCase());
+  if (!stu) { showError('studError', 'No account found with this email.'); return; }
+  if (stu.password !== pass) { showError('studError', 'Incorrect password.'); return; }
+  session = { role: 'student', id: stu.email };
+  renderStudentHome();
+  go('studentApp');
+}
+
+function studentRegister() {
+  const name = document.getElementById('sr_name').value.trim();
+  const reg = document.getElementById('sr_reg').value.trim();
+  const dept = document.getElementById('sr_dept').value.trim();
+  const year = document.getElementById('sr_year').value;
+  const section = document.getElementById('sr_section').value.trim();
+  const routeNo = document.getElementById('sr_route').value;
+  const boardingPoint = document.getElementById('sr_boarding').value;
+  const email = document.getElementById('sr_email').value.trim();
+  const phone = document.getElementById('sr_phone').value.trim();
+  const pass = document.getElementById('sr_password').value;
+  const pass2 = document.getElementById('sr_password2').value;
+
+  if (!name || !reg || !dept || !section || !email || !phone || !pass) { showError('studError', 'Please fill in all fields.'); return; }
+  if (!email.includes('@') || !email.includes('.')) { showError('studError', 'Please enter a valid email address.'); return; }
+  if (pass.length < 4) { showError('studError', 'Password must be at least 4 characters.'); return; }
+  if (pass !== pass2) { showError('studError', 'Passwords do not match.'); return; }
+  if (state.students.some(s => s.email.toLowerCase() === email.toLowerCase())) { showError('studError', 'An account with this email already exists.'); return; }
+
+  state.students.push({ name, reg, dept, year, section, routeNo, boardingPoint, email, phone, password: pass });
+  saveState();
+  showSuccess('studSuccess', 'Registration successful. You can now login.');
+  toggleStudentForm(false);
+  document.getElementById('sl_email').value = email;
+}
+
+/* ======================= DRIVER AUTH ======================= */
+function driverLogin() {
+  const id = document.getElementById('dl_id').value.trim();
+  const pass = document.getElementById('dl_password').value;
+  const route = state.routes.find(r => r.cell === id);
+  if (!route) { showError('drvError', 'No driver found with this phone number.'); return; }
+  if (pass !== 'drv123') { showError('drvError', 'Incorrect password.'); return; }
+  session = { role: 'driver', id: route.routeNo };
+  renderDriverHome();
+  go('driverApp');
+}
+
+/* ======================= ADMIN AUTH ======================= */
+function adminLogin() {
+  const email = document.getElementById('al_email').value.trim().toLowerCase();
+  const pass = document.getElementById('al_password').value;
+  if (email !== 'admin@college.edu' || pass !== 'admin123') { showError('admError', 'Invalid admin credentials.'); return; }
+  session = { role: 'admin', id: email };
+  currentAdminTab = 'overview';
+  renderAdmin();
+  go('adminScreen');
+}
+
+/* ======================= STUDENT DASHBOARD ======================= */
+function getStudent() { return state.students.find(s => s.email === session.id); }
+
+function renderStudentHome() {
+  const stu = getStudent();
+  if (!stu) return;
+  document.getElementById('studWelcome').textContent = 'Welcome, ' + stu.name;
+  const route = findRoute(stu.routeNo);
+  const live = state.liveLocations[stu.routeNo] || { stopIndex: 0, status: 'not-active', tripActive: false };
+  const currentStop = route ? route.stops[live.stopIndex] : null;
+  const nextStop = route ? route.stops[live.stopIndex + 1] : null;
+  const boardingStop = route ? route.stops.find(s => s.name === stu.boardingPoint) : null;
+  const tel = route ? telLink(route.cell) : null;
+
+  document.getElementById('studentHome').innerHTML = `
+    <div class="status-card">
+      <div class="bus-row">
+        <div class="bus-num">🚌 Route ${escapeHtml(stu.routeNo)}${route && route.area ? ' — ' + escapeHtml(route.area) : ''}</div>
+        <div class="status-pill ${statusClass(live.status)}">${statusLabel(live.status)}</div>
+      </div>
+      <div class="kv-grid">
+        <div><span class="k">Driver</span><span class="v">${escapeHtml(route ? route.driver : '—')}</span></div>
+        <div><span class="k">My Boarding Point</span><span class="v">${escapeHtml(stu.boardingPoint || '—')}</span></div>
+        <div><span class="k">Pickup Time</span><span class="v">${escapeHtml(boardingStop ? boardingStop.time : '—')}</span></div>
+        <div><span class="k">Current Location</span><span class="v">${escapeHtml(currentStop ? currentStop.name : '—')}</span></div>
+      </div>
+      ${tel ? `<a class="call-btn" href="tel:${escapeHtml(tel)}">📞 Call Driver</a>` : ''}
+    </div>
+    <div class="grid-btns">
+      <div class="tile-btn" onclick="openSub('track')"><span class="emoji">🚌</span>Track My Bus</div>
+      <div class="tile-btn" onclick="openSub('route')"><span class="emoji">🗺️</span>View Complete Route</div>
+      <div class="tile-btn" onclick="openSub('driver')"><span class="emoji">🧑‍✈️</span>Driver Details</div>
+      <div class="tile-btn" onclick="openSub('directory')"><span class="emoji">📖</span>Bus Directory</div>
+      <div class="tile-btn" onclick="openSub('notif')"><span class="emoji">🔔</span>Notifications</div>
+      <div class="tile-btn" onclick="openSub('profile')"><span class="emoji">👤</span>My Profile</div>
+      <div class="tile-btn" onclick="openSub('help')" style="grid-column: span 2;"><span class="emoji">🆘</span>Transport Help / Incharges</div>
+    </div>
+  `;
+}
+
+function openSub(kind, param) {
+  const stu = getStudent();
+  const titleEl = document.getElementById('subTitle');
+  const body = document.getElementById('subBody');
+
+  if (kind === 'track' || kind === 'route') {
+    const route = findRoute(stu.routeNo);
+    const live = state.liveLocations[stu.routeNo] || { stopIndex: 0, status: 'not-active', tripActive: false };
+    titleEl.textContent = kind === 'track' ? 'Track My Bus' : 'Complete Route';
+    body.innerHTML = `
+      ${kind === 'track' ? `<div class="eta-banner"><span>Current status</span><span class="big">${statusLabel(live.status)}</span></div>` : ''}
+      <div class="route-map">${renderRouteTimeline(route, live.stopIndex)}</div>
+    `;
+  } else if (kind === 'driver') {
+    const route = findRoute(stu.routeNo);
+    const tel = route ? telLink(route.cell) : null;
+    titleEl.textContent = 'Driver Details';
+    body.innerHTML = route ? `
+      <div class="driver-card">
+        <div class="driver-avatar">${escapeHtml((route.driver||'?').split(' ').map(w=>w[0]).join('').slice(0,2))}</div>
+        <div>
+          <div style="font-weight:800;">${escapeHtml(route.driver)}</div>
+          <div style="font-size:0.78rem; color:var(--muted);">Route ${escapeHtml(route.routeNo)}${route.area ? ' · ' + escapeHtml(route.area) : ''}</div>
+          <div style="font-size:0.8rem; margin-top:0.2rem;">📞 ${escapeHtml(route.cell)}</div>
+          ${tel ? `<a class="call-btn" href="tel:${escapeHtml(tel)}">📞 Call Driver</a>` : ''}
+        </div>
+      </div>
+    ` : `<p style="color:var(--muted);">No driver assigned yet.</p>`;
+  } else if (kind === 'directory') {
+    titleEl.textContent = 'Bus Directory';
+    body.innerHTML = renderDirectoryHtml('studDirSearch', 'studDirList');
+    setTimeout(() => renderDirectoryList('studDirSearch', 'studDirList', 'sub'), 0);
+  } else if (kind === 'notif') {
+    titleEl.textContent = 'Notifications';
+    body.innerHTML = state.notifications.length
+      ? state.notifications.map(n => `<div class="notif-item">${escapeHtml(n.text)}<div class="time">${escapeHtml(n.time)}</div></div>`).join('')
+      : `<p style="color:var(--muted);">No notifications yet.</p>`;
+  } else if (kind === 'profile') {
+    titleEl.textContent = 'My Profile';
+    body.innerHTML = `
+      <div class="status-card">
+        <div class="kv-grid">
+          <div><span class="k">Name</span><span class="v">${escapeHtml(stu.name)}</span></div>
+          <div><span class="k">Register No.</span><span class="v">${escapeHtml(stu.reg)}</span></div>
+          <div><span class="k">Department</span><span class="v">${escapeHtml(stu.dept)}</span></div>
+          <div><span class="k">Year / Section</span><span class="v">${escapeHtml(stu.year)} - ${escapeHtml(stu.section)}</span></div>
+          <div><span class="k">Email</span><span class="v">${escapeHtml(stu.email)}</span></div>
+          <div><span class="k">Phone</span><span class="v">${escapeHtml(stu.phone)}</span></div>
+          <div><span class="k">Route</span><span class="v">Route ${escapeHtml(stu.routeNo)}</span></div>
+          <div><span class="k">Boarding Point</span><span class="v">${escapeHtml(stu.boardingPoint)}</span></div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-block" style="margin-top:1rem;" onclick="editProfile()">Edit Phone Number</button>
+    `;
+  } else if (kind === 'help') {
+    titleEl.textContent = 'Transport Help';
+    body.innerHTML = `
+      <div class="section-title" style="margin-top:0;">Transport Incharges</div>
+      ${TRANSPORT_INCHARGES.map(t => `
+        <div class="incharge-card">
+          <span>👤 ${escapeHtml(t.name)}</span>
+          <a class="call-btn" href="tel:${escapeHtml(t.phone)}">📞 ${escapeHtml(t.phone)}</a>
+        </div>
+      `).join('')}
+    `;
+  }
+  go('studentSub');
+}
+
+function editProfile() {
+  const stu = getStudent();
+  const newPhone = prompt('Update phone number:', stu.phone);
+  if (newPhone && newPhone.trim()) { stu.phone = newPhone.trim(); saveState(); openSub('profile'); }
+}
+
+function renderRouteTimeline(route, currentIdx) {
+  if (!route) return `<p style="color:var(--muted);">Route not found.</p>`;
+  return route.stops.map((stop, i) => {
+    const passed = i < currentIdx;
+    const current = i === currentIdx;
+    const isLast = i === route.stops.length - 1;
+    return `
+      <div class="stop-row">
+        <div class="stop-dot ${passed ? 'passed' : current ? 'current' : ''}">${!isLast ? `<div class="stop-line ${passed ? 'passed' : ''}"></div>` : ''}</div>
+        <div class="stop-info">
+          <div class="stop-name ${current ? 'current' : ''}">${current ? '🚌 ' : ''}${escapeHtml(stop.name)}</div>
+          <div class="stop-time">🕐 ${escapeHtml(stop.time)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ======================= DIRECTORY (Bus/Driver, shared by student sub + admin) ======================= */
+function renderDirectoryHtml(searchId, listId) {
+  return `
+    <div class="search-box"><input type="text" id="${searchId}" placeholder="Search bus, route, driver or boarding point" oninput="renderDirectoryList('${searchId}','${listId}', 'sub')"></div>
+    <div class="filter-row" id="${searchId}_filters">
+      <div class="filter-chip active" data-f="all" onclick="setDirFilter(this,'${searchId}','${listId}')">All Routes</div>
+      <div class="filter-chip" data-f="area" onclick="setDirFilter(this,'${searchId}','${listId}')">Special Areas</div>
+    </div>
+    <div id="${listId}"></div>
+  `;
+}
+let dirFilter = 'all';
+function setDirFilter(el, searchId, listId) {
+  document.querySelectorAll('#' + searchId + '_filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  dirFilter = el.dataset.f;
+  renderDirectoryList(searchId, listId, 'sub');
+}
+function renderDirectoryList(searchId, listId, context) {
+  const q = (document.getElementById(searchId)?.value || '').toLowerCase().trim();
+  let routes = state.routes;
+  if (dirFilter === 'area') routes = routes.filter(r => r.area);
+  if (q) {
+    routes = routes.filter(r =>
+      r.routeNo.toLowerCase().includes(q) ||
+      (r.driver||'').toLowerCase().includes(q) ||
+      (r.area||'').toLowerCase().includes(q) ||
+      r.stops.some(s => s.name.toLowerCase().includes(q))
+    );
+  }
+  const list = document.getElementById(listId);
+  if (!list) return;
+  list.innerHTML = routes.length ? routes.map(r => `
+    <div class="route-card">
+      <div class="top-row">
+        <div>
+          <div class="rname">🚌 Route No ${escapeHtml(r.routeNo)}</div>
+          ${r.area ? `<div class="rarea">${escapeHtml(r.area)}</div>` : ''}
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="${context === 'sub' ? `viewRouteDetail('${escapeHtml(r.routeNo)}')` : `openRouteModal('${escapeHtml(r.routeNo)}')`}">${context === 'sub' ? 'View Route' : 'Edit'}</button>
+      </div>
+      <div class="rmeta">👨‍✈️ ${escapeHtml(r.driver)} &nbsp;·&nbsp; 📞 ${escapeHtml(r.cell)}</div>
+      <div class="rmeta" style="color:var(--muted); font-size:0.76rem;">📍 ${escapeHtml(r.stops[0]?.name || '—')} → ${escapeHtml(r.stops[r.stops.length-1]?.name || '—')}</div>
+    </div>
+  `).join('') : `<div class="empty-note">No routes match your search.</div>`;
+}
+
+function viewRouteDetail(routeNo) {
+  const route = findRoute(routeNo);
+  const live = state.liveLocations[routeNo] || { stopIndex: 0 };
+  const tel = telLink(route.cell);
+  document.getElementById('subTitle').textContent = 'Route ' + routeNo;
+  document.getElementById('subBody').innerHTML = `
+    <div class="status-card">
+      <div class="bus-row"><div class="bus-num">🚌 Route No ${escapeHtml(route.routeNo)}</div></div>
+      ${route.area ? `<div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${escapeHtml(route.area)}</div>` : ''}
+      <div class="kv-grid">
+        <div><span class="k">Driver</span><span class="v">${escapeHtml(route.driver)}</span></div>
+        <div><span class="k">Contact</span><span class="v">${escapeHtml(route.cell)}</span></div>
+      </div>
+      ${tel ? `<a class="call-btn" href="tel:${escapeHtml(tel)}">📞 Call Driver</a>` : ''}
+    </div>
+    <div class="section-title">Boarding Points</div>
+    <div class="route-map">${renderRouteTimeline(route, live.stopIndex)}</div>
+  `;
+  go('studentSub');
+}
+
+/* ======================= DRIVER DASHBOARD ======================= */
+function getDriverRoute() { return findRoute(session.id); }
+
+function renderDriverHome() {
+  const route = getDriverRoute();
+  if (!route) return;
+  document.getElementById('drvWelcome').textContent = 'Welcome, ' + route.driver;
+  const live = state.liveLocations[route.routeNo] || { stopIndex: 0, status: 'not-active', tripActive: false };
+  const currentStop = route.stops[live.stopIndex];
+  const nextStop = route.stops[live.stopIndex + 1];
+
+  document.getElementById('driverBody').innerHTML = `
+    <div class="status-card">
+      <div class="bus-row">
+        <div class="bus-num">🚌 Route ${escapeHtml(route.routeNo)}</div>
+        <div class="status-pill ${statusClass(live.status)}">${statusLabel(live.status)}</div>
+      </div>
+      <div class="kv-grid">
+        <div><span class="k">Driver</span><span class="v">${escapeHtml(route.driver)}</span></div>
+        <div><span class="k">Contact</span><span class="v">${escapeHtml(route.cell)}</span></div>
+        <div><span class="k">Current Stop</span><span class="v">${escapeHtml(currentStop ? currentStop.name : '—')}</span></div>
+        <div><span class="k">Next Stop</span><span class="v">${escapeHtml(nextStop ? nextStop.name : 'End of route')}</span></div>
+      </div>
+    </div>
+    <div class="section-title">Route Progress</div>
+    <div class="route-map">${renderRouteTimeline(route, live.stopIndex)}</div>
+    <div class="trip-btns">
+      ${!live.tripActive
+        ? `<button class="btn btn-teal btn-block" onclick="driverStartTrip()">▶ Start Trip</button>`
+        : `
+          <button class="btn btn-teal btn-block" onclick="driverNextStop()" ${live.stopIndex >= route.stops.length - 1 ? 'disabled style="opacity:0.5;"' : ''}>➡️ Next Stop</button>
+          <button class="btn btn-outline btn-block" onclick="driverMarkDelayed()">🟡 Mark Delayed</button>
+          <button class="btn btn-danger btn-block" onclick="driverEndTrip()">⛔ End Trip</button>
+        `
+      }
+    </div>
+  `;
+}
+
+function driverStartTrip() {
+  const route = getDriverRoute();
+  state.liveLocations[route.routeNo] = { stopIndex: 0, status: 'on-route', tripActive: true };
+  pushNotif(`🚌 Route ${route.routeNo} bus has started its trip.`);
+  saveState(); renderDriverHome();
+}
+function driverNextStop() {
+  const route = getDriverRoute();
+  const live = state.liveLocations[route.routeNo];
+  if (live.stopIndex < route.stops.length - 1) {
+    live.stopIndex++;
+    live.status = 'on-route';
+    if (live.stopIndex === route.stops.length - 1) {
+      pushNotif(`🛑 Route ${route.routeNo} bus has reached the final stop.`);
+    } else {
+      pushNotif(`🔔 Route ${route.routeNo} bus is approaching ${route.stops[live.stopIndex + 1].name}.`);
+    }
+    saveState(); renderDriverHome();
+  }
+}
+function driverMarkDelayed() {
+  const route = getDriverRoute();
+  state.liveLocations[route.routeNo].status = 'delayed';
+  pushNotif(`⚠️ Route ${route.routeNo} bus is delayed.`);
+  saveState(); renderDriverHome();
+}
+function driverEndTrip() {
+  const route = getDriverRoute();
+  const live = state.liveLocations[route.routeNo];
+  live.tripActive = false; live.status = 'not-active';
+  pushNotif(`🛑 Route ${route.routeNo} bus has completed its trip.`);
+  saveState(); renderDriverHome();
+}
+
+/* ======================= ADMIN DASHBOARD ======================= */
+let currentAdminTab = 'overview';
+const ADMIN_TABS = [
+  { key: 'overview', label: '📊 Dashboard' },
+  { key: 'students', label: '👩‍🎓 Students' },
+  { key: 'routes', label: '🗺️ Routes' },
+  { key: 'drivers', label: '🧑‍✈️ Drivers' },
+  { key: 'monitoring', label: '📍 Live Monitoring' },
+  { key: 'incharges', label: '☎️ Transport Incharges' },
+  { key: 'notifications', label: '🔔 Notifications' }
+];
+
+function renderAdmin() {
+  document.getElementById('adminSidebar').innerHTML = `
+    <div class="brand-mini">🚌 Bus Tracker Admin</div>
+    ${ADMIN_TABS.map(t => `<div class="admin-nav-item ${t.key === currentAdminTab ? 'active' : ''}" onclick="switchAdminTab('${t.key}')">${t.label}</div>`).join('')}
+    <div class="admin-nav-item" onclick="logout()">🚪 Logout</div>
+  `;
+  renderAdminMain();
+}
+function switchAdminTab(key) { currentAdminTab = key; renderAdmin(); }
+
+function renderAdminMain() {
+  const main = document.getElementById('adminMain');
+  if (currentAdminTab === 'overview') {
+    const active = state.routes.filter(r => state.liveLocations[r.routeNo]?.status === 'on-route').length;
+    const delayed = state.routes.filter(r => state.liveLocations[r.routeNo]?.status === 'delayed').length;
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Dashboard</h2><button class="btn btn-outline btn-sm" onclick="resetDemo()">Reset to Imported Data</button></div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="num">${state.students.length}</div><div class="lbl">Total Students</div></div>
+        <div class="stat-card"><div class="num">${state.routes.length}</div><div class="lbl">Total Routes</div></div>
+        <div class="stat-card"><div class="num">${new Set(state.routes.map(r=>r.driver)).size}</div><div class="lbl">Drivers</div></div>
+        <div class="stat-card"><div class="num">${active}</div><div class="lbl">Buses On Route</div></div>
+        <div class="stat-card"><div class="num">${delayed}</div><div class="lbl">Delayed Buses</div></div>
+      </div>
+      <div class="section-title">Routes Snapshot</div>
+      <table><thead><tr><th>Route</th><th>Driver</th><th>Area</th><th>Status</th></tr></thead>
+      <tbody>${state.routes.map(r => `<tr><td>${escapeHtml(r.routeNo)}</td><td>${escapeHtml(r.driver)}</td><td>${escapeHtml(r.area||'—')}</td><td>${statusLabel(state.liveLocations[r.routeNo]?.status||'not-active')}</td></tr>`).join('')}</tbody></table>
+    `;
+  } else if (currentAdminTab === 'students') {
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Student Management</h2><button class="btn btn-teal btn-sm" onclick="openStudentModal()">+ Add Student</button></div>
+      <div class="toolbar-row"><input type="text" id="studSearch" placeholder="Search students..." oninput="renderAdminMain()"></div>
+      <table><thead><tr><th>Name</th><th>Reg No.</th><th>Dept</th><th>Year/Sec</th><th>Route</th><th>Boarding Point</th><th>Actions</th></tr></thead>
+      <tbody>${filteredStudents().map(s => `
+        <tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.reg)}</td><td>${escapeHtml(s.dept)}</td><td>${escapeHtml(s.year)} ${escapeHtml(s.section)}</td><td>${escapeHtml(s.routeNo)}</td><td>${escapeHtml(s.boardingPoint)}</td>
+        <td class="table-actions"><button class="link-btn" onclick="openStudentModal('${escapeHtml(s.email)}')">Edit</button><button class="link-btn danger" onclick="deleteStudent('${escapeHtml(s.email)}')">Delete</button></td></tr>
+      `).join('') || `<tr><td colspan="7" style="text-align:center; color:var(--muted);">No students found.</td></tr>`}</tbody></table>
+    `;
+  } else if (currentAdminTab === 'routes') {
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Route Management</h2><button class="btn btn-teal btn-sm" onclick="openRouteModal()">+ Add Route</button></div>
+      ${renderDirectoryHtml('admDirSearch', 'admDirList')}
+    `;
+    setTimeout(() => renderDirectoryList('admDirSearch', 'admDirList', 'admin'), 0);
+  } else if (currentAdminTab === 'drivers') {
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Driver Directory</h2></div>
+      <table><thead><tr><th>Driver</th><th>Route</th><th>Area</th><th>Cell</th><th>First Boarding</th></tr></thead>
+      <tbody>${state.routes.map(r => `
+        <tr><td>${escapeHtml(r.driver)}</td><td>${escapeHtml(r.routeNo)}</td><td>${escapeHtml(r.area||'—')}</td><td>${escapeHtml(r.cell)}</td><td>${escapeHtml(r.stops[0]?.time||'—')} — ${escapeHtml(r.stops[0]?.name||'—')}</td></tr>
+      `).join('')}</tbody></table>
+    `;
+  } else if (currentAdminTab === 'monitoring') {
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Live Bus Monitoring</h2></div>
+      <div class="stat-cards">
+      ${state.routes.map(r => {
+        const live = state.liveLocations[r.routeNo] || { stopIndex: 0, status: 'not-active' };
+        return `
+        <div class="status-card">
+          <div class="bus-row"><div class="bus-num">Route ${escapeHtml(r.routeNo)}</div><div class="status-pill ${statusClass(live.status)}">${statusLabel(live.status)}</div></div>
+          <div style="margin-top:0.6rem; max-height:220px; overflow-y:auto;">${renderRouteTimeline(r, live.stopIndex)}</div>
+        </div>`;
+      }).join('')}
+      </div>
+    `;
+  } else if (currentAdminTab === 'incharges') {
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Transport Incharges</h2></div>
+      ${TRANSPORT_INCHARGES.map(t => `<div class="incharge-card"><span>👤 ${escapeHtml(t.name)}</span><span>📞 ${escapeHtml(t.phone)}</span></div>`).join('')}
+    `;
+  } else if (currentAdminTab === 'notifications') {
+    main.innerHTML = `
+      <div class="admin-topbar"><h2>Notifications</h2></div>
+      ${state.notifications.map(n => `<div class="notif-item">${escapeHtml(n.text)}<div class="time">${escapeHtml(n.time)}</div></div>`).join('') || '<p style="color:var(--muted);">No notifications yet.</p>'}
+    `;
+  }
+}
+
+function filteredStudents() {
+  const q = (document.getElementById('studSearch')?.value || '').toLowerCase();
+  if (!q) return state.students;
+  return state.students.filter(s => (s.name + s.reg + s.email + s.dept).toLowerCase().includes(q));
+}
+
+/* ---- Modals ---- */
+function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
+
+function openStudentModal(email) {
+  const editing = !!email;
+  const s = editing ? state.students.find(x => x.email === email) : {};
+  document.getElementById('modalContent').innerHTML = `
+    <h3>${editing ? 'Edit' : 'Add'} Student</h3>
+    <div class="field"><label>Full Name</label><input id="m_name" value="${escapeHtml(s.name||'')}"></div>
+    <div class="field"><label>Register No.</label><input id="m_reg" value="${escapeHtml(s.reg||'')}"></div>
+    <div class="field"><label>Department</label><input id="m_dept" value="${escapeHtml(s.dept||'CSE')}"></div>
+    <div class="field"><label>Year</label><input id="m_year" value="${escapeHtml(s.year||'2nd Year')}"></div>
+    <div class="field"><label>Section</label><input id="m_section" value="${escapeHtml(s.section||'A')}"></div>
+    <div class="field"><label>Email</label><input id="m_email" value="${escapeHtml(s.email||'')}" ${editing?'disabled':''}></div>
+    <div class="field"><label>Phone</label><input id="m_phone" value="${escapeHtml(s.phone||'')}"></div>
+    <div class="field"><label>Route</label>
+      <select id="m_route" onchange="populateModalBoarding()">${state.routes.map(r => `<option value="${escapeHtml(r.routeNo)}" ${s.routeNo===r.routeNo?'selected':''}>Route ${escapeHtml(r.routeNo)}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>Boarding Point</label><select id="m_boarding"></select></div>
+    <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-teal btn-sm" onclick="saveStudentModal(${editing ? `'${escapeHtml(email)}'` : 'null'})">Save</button></div>
+  `;
+  document.getElementById('modalBackdrop').classList.add('open');
+  populateModalBoarding(s.boardingPoint);
+}
+function populateModalBoarding(selected) {
+  const route = findRoute(document.getElementById('m_route').value);
+  document.getElementById('m_boarding').innerHTML = (route ? route.stops : []).map(st => `<option ${st.name===selected?'selected':''}>${escapeHtml(st.name)}</option>`).join('');
+}
+function saveStudentModal(editingEmail) {
+  const data = {
+    name: document.getElementById('m_name').value.trim(),
+    reg: document.getElementById('m_reg').value.trim(),
+    dept: document.getElementById('m_dept').value.trim(),
+    year: document.getElementById('m_year').value.trim(),
+    section: document.getElementById('m_section').value.trim(),
+    email: document.getElementById('m_email').value.trim(),
+    phone: document.getElementById('m_phone').value.trim(),
+    routeNo: document.getElementById('m_route').value,
+    boardingPoint: document.getElementById('m_boarding').value
+  };
+  if (!data.name || !data.email) { alert('Name and email are required.'); return; }
+  if (editingEmail) {
+    const s = state.students.find(x => x.email === editingEmail);
+    Object.assign(s, data, { password: s.password });
+  } else {
+    if (state.students.some(x => x.email === data.email)) { alert('Email already exists.'); return; }
+    state.students.push({ ...data, password: 'pass123' });
+  }
+  saveState(); closeModal(); renderAdminMain();
+}
+function deleteStudent(email) {
+  if (!confirm('Delete this student?')) return;
+  state.students = state.students.filter(s => s.email !== email);
+  saveState(); renderAdminMain();
+}
+
+function openRouteModal(routeNo) {
+  const editing = !!routeNo;
+  const r = editing ? findRoute(routeNo) : { stops: [{time:'',name:''}] };
+  document.getElementById('modalContent').innerHTML = `
+    <h3>${editing ? 'Edit' : 'Add'} Route</h3>
+    <div class="field"><label>Route No.</label><input id="m_rno" value="${escapeHtml(r.routeNo||'')}" ${editing?'disabled':''}></div>
+    <div class="field"><label>Area (optional heading)</label><input id="m_rarea" value="${escapeHtml(r.area||'')}"></div>
+    <div class="field"><label>Driver Name</label><input id="m_rdriver" value="${escapeHtml(r.driver||'')}"></div>
+    <div class="field"><label>Driver Contact</label><input id="m_rcell" value="${escapeHtml(r.cell||'')}"></div>
+    <div class="field"><label>Boarding Points (time — stop name)</label>
+      <div id="m_stopsEditor">${(r.stops||[]).map((s,i) => stopEditorRow(s.time, s.name, i)).join('')}</div>
+      <button class="btn btn-outline btn-sm" style="margin-top:0.4rem;" onclick="addStopRow()">+ Add Stop</button>
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-teal btn-sm" onclick="saveRouteModal(${editing ? `'${escapeHtml(routeNo)}'` : 'null'})">Save</button></div>
+  `;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function stopEditorRow(time, name, i) {
+  return `<div class="stops-editor-row" data-i="${i}"><input placeholder="time" value="${escapeHtml(time||'')}" class="m_stopTime"><input placeholder="stop name" value="${escapeHtml(name||'')}" class="m_stopName"><button class="small-x" onclick="this.parentElement.remove()">✕</button></div>`;
+}
+function addStopRow() {
+  const editor = document.getElementById('m_stopsEditor');
+  const div = document.createElement('div');
+  div.innerHTML = stopEditorRow('', '', editor.children.length);
+  editor.appendChild(div.firstChild);
+}
+function saveRouteModal(editingNo) {
+  const routeNo = document.getElementById('m_rno').value.trim();
+  const area = document.getElementById('m_rarea').value.trim();
+  const driver = document.getElementById('m_rdriver').value.trim();
+  const cell = document.getElementById('m_rcell').value.trim();
+  const stops = Array.from(document.querySelectorAll('#m_stopsEditor .stops-editor-row')).map(row => ({
+    time: row.querySelector('.m_stopTime').value.trim(),
+    name: row.querySelector('.m_stopName').value.trim()
+  })).filter(s => s.name);
+  if (!routeNo || !driver) { alert('Route number and driver are required.'); return; }
+  if (editingNo) {
+    const r = findRoute(editingNo);
+    Object.assign(r, { area, driver, cell, stops });
+  } else {
+    if (findRoute(routeNo)) { alert('Route number already exists.'); return; }
+    state.routes.push({ routeNo, area, driver, cell, stops, status: 'not-active' });
+    state.liveLocations[routeNo] = { stopIndex: 0, status: 'not-active', tripActive: false };
+  }
+  saveState(); closeModal(); renderAdminMain();
+}
+
+document.getElementById('modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
+</script>
+</body>
+</html>
